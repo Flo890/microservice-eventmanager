@@ -25,13 +25,11 @@ public interface DatabaseService {
      * @param eventFields fields describing the event (e.g. what happend, affected entities, ...)
      * @param metaFields fields describing extra properties for the event, e.g. priority
      * @return amount of published events
-     * @throws SQLException
      */
     Integer dispatchIncomingEvent(String eventIdentifier, Map<String,Object> eventFields, Map<EventProperty,Object> metaFields);
 
     /**
      *
-     * @param dispatchedEventId
      * @return true if it could be blocked, false if not (e.g. an other thread took the event)
      */
     EventUngeneric fetchAndBlockEventForProcessing(String serviceIdentifier, String eventIdentifier);

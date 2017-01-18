@@ -13,6 +13,7 @@ import eventmanager.clientservices.service.NonblockingEventProcessingService;
 import eventmanager.clientservices.service.clientservercommunication.EventmanagerCommunicationService;
 import eventmanager.clientservices.service.clientservercommunication.EventmanagerCommunicationServiceHttp;
 import eventmanager.common.model.Event;
+import eventmanager.common.model.EventFactory;
 import eventmanager.common.model.eventreturnmetadata.EventExecutionMetadata;
 import eventmanager.microservice.app.EventManagerApp;
 import eventmanager.microservice.service.DatabaseServiceImpl;
