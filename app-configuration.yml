@@ -1,0 +1,18 @@
+dbConfiguration:
+    hostname: localhost
+    port: 27017
+    username:
+    password:
+    dbName: eventmanager
+
+
+logging:
+    level: INFO
+
+server:
+  applicationConnectors:
+  - type: http
+    port: 9120
+  adminConnectors:
+  - type: http
+    port: 9121

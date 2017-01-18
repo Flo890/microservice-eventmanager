@@ -1,0 +1,18 @@
+
+Service für ein Eventtyp registrieren:
+http://localhost:9120/subscribe-to-event?serviceIdentifier=trail-enricher-eventmanager&eventIdentifier=new_trail_created
+
+Neues Event publishen und dadurch an die subscriber senden:
+http://localhost:9120/publish-event?eventIdentifier=new_trail_created&eventFields={%22trailId%22:123}&metaFields={}"}
+
+retrieve an unprocessed event:
+http://localhost:9120/fetch-and-block-event?serviceIdentifier=trail-enricher-eventmanager&eventIdentifier=new_trail_created
+
+POST:
+http://localhost:9120/unblock-event
+
+curl -XPOST "http://localhost:9120/unblock-event" -d "{'eventId':'58776a9ecb7a633eb064898d'}" --Header "Content-Type: application/json"
+
+http://localhost:9120/set-events-outdated?keyFields={"eventIdentifier":"new_trail_created"}
+
+http://localhost:9120/fetch-and-block-events-batch?serviceIdentifier=trail-enricher-eventmanager&eventIdentifier=new_trail_created&minBatchSize=3&flushIfOlderThanMinutes=1484296950953
