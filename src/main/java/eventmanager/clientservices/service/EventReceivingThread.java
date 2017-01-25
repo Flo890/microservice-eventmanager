@@ -129,7 +129,7 @@ public class EventReceivingThread extends Thread {
                         );
 
                     } catch (InterruptedException | ExecutionException e) {
-                        LOGGER.warn(logPrefix + "Processing event " + fetchedEvent.getId() + " failed due to exception", e);
+                        LOGGER.warn(logPrefix + "Processing event " + fetchedEvent.getId() + " failed due to exception: "+e.getMessage(), e);
                         eventReturnMetadata = EventReturnMetadata.createFailed(
                                 fetchedEvent.getId(),
                                 startTime,

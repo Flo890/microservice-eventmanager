@@ -58,11 +58,11 @@ public class EventmanagerCommunicationServiceHttp<T extends Enum<T>> implements 
                 EventServiceResponse.class,
                 false,
                 new RetryOptions(2, RetryOptions.RetryFunctionType.EXPONENTIAL,(Integer count) -> {LOGGER.warn("EventStoreService might not be available yet. fetchAndBlock requires retry #"+count+"..."); return null;}),
-                Integer.MAX_VALUE
+                20000
         );
         EventServiceResponse eventServiceResponse = microserviceQueryCommand.execute();
 
-        if(!eventServiceResponse.isSuccess()){
+        if(eventServiceResponse==null || !eventServiceResponse.isSuccess()){
             throw new MicroserviceCommunicationException("could not fetch and block event "+(eventIdentifier!=null ? "&eventIdentifier="+eventIdentifier.name() : "")+": "+eventServiceResponse.getMessage());
         } else {
             if(eventServiceResponse.getEvent()==null){
@@ -211,11 +211,11 @@ public class EventmanagerCommunicationServiceHttp<T extends Enum<T>> implements 
                 MultiEventServiceResponse.class,
                 false,
                 new RetryOptions(2, RetryOptions.RetryFunctionType.EXPONENTIAL,(Integer count) -> {LOGGER.warn("EventStoreService might not be available yet. fetchAndBlockBatch requires retry #"+count+"..."); return null;}),
-                Integer.MAX_VALUE
+                20000
         );
         MultiEventServiceResponse eventServiceResponse = microserviceQueryCommand.execute();
 
-        if(!eventServiceResponse.isSuccess()){
+        if(eventServiceResponse==null || !eventServiceResponse.isSuccess()){
             throw new MicroserviceCommunicationException("could not fetch and block events batch "+(eventIdentifier!=null ? "&eventIdentifier="+eventIdentifier.name() : "")+": "+eventServiceResponse.getMessage());
         } else {
             List<Event> events = new ArrayList<>();
