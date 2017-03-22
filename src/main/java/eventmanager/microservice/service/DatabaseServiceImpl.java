@@ -2,6 +2,7 @@ package eventmanager.microservice.service;
 
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -290,5 +291,34 @@ public class DatabaseServiceImpl implements DatabaseService {
         );
 
         return new Long(eventsCollection.count(filter)).intValue();
+    }
+
+    public Map<ProcessingState,Map<String,Integer>> getEventIdentifierCountForEachProcessingState(){
+        MongoCollection<Document> eventsCollection = mongoDatabase.getCollection(EVENTS_COLLECTION_NAME);
+
+        Map<ProcessingState,Map<String,Integer>> counts = new HashMap<>();
+        for(ProcessingState aProcessingState : ProcessingState.values()) {
+            Map<String,Integer> eventIdentifiersCount = new HashMap<>();
+            for(String aEventIdentifier : getAllExistingEventIdentifiers()) {
+                Document filter = new Document();
+                filter.append("eventIdentifier", aEventIdentifier);
+                filter.append("processingMetadata.processing_state", aProcessingState.name());
+                Integer count = new Long(eventsCollection.count(filter)).intValue();
+                eventIdentifiersCount.put(aEventIdentifier,count);
+            }
+            counts.put(aProcessingState,eventIdentifiersCount);
+        }
+        return counts;
+    }
+
+    private List<String> getAllExistingEventIdentifiers(){
+        MongoCollection<Document> eventsCollection = mongoDatabase.getCollection(EVENTS_COLLECTION_NAME);
+
+        Iterable<String> eventIdentifiersIterable = eventsCollection.distinct("eventIdentifier",String.class);
+
+        List<String> distinctEventIdentifiers = new ArrayList<>();
+        eventIdentifiersIterable.forEach(s -> distinctEventIdentifiers.add(s));
+
+        return distinctEventIdentifiers;
     }
 }

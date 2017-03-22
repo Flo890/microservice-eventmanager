@@ -5,6 +5,7 @@ import eventmanager.common.model.Event;
 import eventmanager.common.model.EventProperty;
 import eventmanager.common.model.EventUngeneric;
 import eventmanager.common.model.eventreturnmetadata.EventReturnMetadata;
+import eventmanager.microservice.model.ProcessingState;
 import org.bson.Document;
 
 import java.sql.SQLException;
@@ -41,4 +42,10 @@ public interface DatabaseService {
     Integer setEventsOutdatedByEventFields(Map<String,Object> fields);
 
     Integer countEventsOfTypesReceivedSince(List<String> types, Long since);
+
+    /**
+     * used by stats endpoint
+     * @return
+     */
+    Map<ProcessingState,Map<String,Integer>> getEventIdentifierCountForEachProcessingState();
 }

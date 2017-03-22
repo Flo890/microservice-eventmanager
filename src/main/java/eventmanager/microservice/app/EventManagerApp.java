@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eventmanager.microservice.app.healthchecks.SubscribeHealthCheck;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import eventmanager.microservice.service.DatabaseService;
@@ -25,7 +26,7 @@ public class EventManagerApp extends Application<AppConfiguration> {
 
     @Override
     public void initialize(Bootstrap<AppConfiguration> bootstrap) {
-
+        bootstrap.addBundle(new AssetsBundle("/dashboard_static/", "/dashboard"));
     }
 
     @Override
@@ -51,6 +52,8 @@ public class EventManagerApp extends Application<AppConfiguration> {
                 databaseService
         );
         environment.jersey().register(countEventsOfTypesReceivedSinceResource);
+        final StatsResource statsResource = new StatsResource(databaseService);
+        environment.jersey().register(statsResource);
 
 
         environment.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

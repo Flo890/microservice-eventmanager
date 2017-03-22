@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+text{
+	font-size:12px;
+}
+.mainBars rect{
+  shape-rendering: auto;
+  fill-opacity: 0;
+  stroke-width: 0.5px;
+  stroke: rgb(0, 0, 0);
+  stroke-opacity: 0;
+}
+.subBars{
+	shape-rendering:crispEdges;
+}
+.edges{
+	stroke:none;
+	fill-opacity:0.5;
+}
+.header{
+	text-anchor:middle;
+	font-size:16px;
+}
+line{
+	stroke:grey;
+}
+</style>
+<body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<!--<script src="http://vizjs.org/viz.v1.1.0.min.js"></script>-->
+<script src="lib/viz.v1.1.0.min.js"></script>
+<script
+        src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+<script>
+
+    // ----------- graph 1 -------------
+
+    var color ={unprocessed:"#3366CC", processing:"#DC3912",  failed:"#FF9900", outdated:"#109618", processed:"#990099", terminated:"#0099C6"};
+    var svg = d3.select("body").append("svg").attr("width", 960).attr("height", 800);
+
+    svg.append("text").attr("x",250).attr("y",70)
+        .attr("class","header").text("Events");
+
+    var g =svg.append("g").attr("transform","translate(150,100)");
+
+    var renderGraphOne = function() {
+        $.get("/stats/processingstate_eventidentifier_count", function (responseData) {
+            dataGraph1 = responseData.processingStateEventIdentifierCount;
+
+            var bp = viz.bP()
+                    .data(dataGraph1)
+                    .min(12)
+                    .pad(1)
+                    .height(600)
+                    .width(200)
+                    .barSize(35)
+                    .fill(d => color[d.primary]);
+
+            g.call(bp)
+
+            //update labels for evtl new data
+            //TODO on update this overwrites temporarly displayed mouseover values
+            g.selectAll(".mainBars").select(".perc")
+                .text(function (d) {
+                    return d.value
+                });
+
+            g.selectAll(".mainBars")
+                .on("mouseover", function (d) {
+                    bp.mouseover(d);
+
+                    g.selectAll(".mainBars").select(".perc")
+                        .text(function (d) {
+                            return d.value
+                        });
+                })
+                .on("mouseout", function (d) {
+                    bp.mouseout(d);
+
+                    g.selectAll(".mainBars").select(".perc")
+                        .text(function (d) {
+                            return d.value
+                        });
+                });
+
+        });
+    }
+
+
+
+
+
+
+    renderGraphOne();
+    //repeat rendering main graph
+    setInterval(renderGraphOne,5000);
+
+    //render labels after graph is ready
+    setTimeout(function(){
+        g.append("text").attr("x", -50).attr("y", -8).style("text-anchor", "middle").text("processing_state");
+        g.append("text").attr("x", 250).attr("y", -8).style("text-anchor", "middle").text("event_identifier");
+
+        g.append("line").attr("x1", -100).attr("x2", 0);
+        g.append("line").attr("x1", 200).attr("x2", 300);
+
+        g.append("line").attr("y1", 610).attr("y2", 610).attr("x1", -100).attr("x2", 0);
+        g.append("line").attr("y1", 610).attr("y2", 610).attr("x1", 200).attr("x2", 300);
+
+        g.selectAll(".mainBars").append("text").attr("class", "label")
+            .attr("x", d => (d.part == "primary" ? -30 : 50))
+        .attr("y", d => +6)
+        .text(d => d.key)
+        .attr("text-anchor", d => (d.part == "primary" ? "end" : "start"));
+
+        g.selectAll(".mainBars").append("text").attr("class", "perc")
+            .attr("x", d => (d.part == "primary" ? -100 : 20))
+        .attr("y", d => +6)
+        .text(function (d) {
+            return d.value
+        })
+            .attr("text-anchor", d => (d.part == "primary" ? "end" : "start"));
+    },1000);
+
+
+
+    d3.select(self.frameElement).style("height", "800px");
+</script>
+</body>
+</html>

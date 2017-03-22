@@ -30,6 +30,9 @@ dependencies {
     //compile files('../microservice-commons/build/libs/microservice-commons-0.1.jar')
 
     compile 'io.dropwizard:dropwizard-core:1.0.0-rc2'
+    // https://mvnrepository.com/artifact/io.dropwizard/dropwizard-assets
+    compile group: 'io.dropwizard', name: 'dropwizard-assets', version: '1.0.6'
+
 
     compile 'com.netflix.hystrix:hystrix-core:1.5.2'
     compile 'org.mongodb:mongo-java-driver:3.4.0'
