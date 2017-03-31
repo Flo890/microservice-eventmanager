@@ -8,8 +8,10 @@ import eventmanager.microservice.service.DatabaseService;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -42,22 +44,53 @@ public class StatsResource {
     @Timed
     @Path("processingstate_eventidentifier_count")
     @Produces(MediaType.APPLICATION_JSON)
-    public StatsData getAllStats() {
-        //collect data
-        Map<ProcessingState,Map<String,Integer>> counts = databaseService.getEventIdentifierCountForEachProcessingState();
+    public StatsData getAllStats(@QueryParam("fromDate") Long fromDate, @QueryParam("toDate") Long toDate) {
 
-        List<List<Object>> transformedCounts = new ArrayList<>();
-        for(Map.Entry<ProcessingState,Map<String,Integer>> aProcessingStateCount : counts.entrySet()){
+        StatsData statsData = new StatsData();
+
+        //collect data per eventIdentifier
+        Map<ProcessingState,Map<String,Integer>> countsPerEvent = databaseService.getEventIdentifierCountForEachProcessingState(new Date(fromDate),new Date(toDate));
+        List<List<Object>> transformedEventCounts = new ArrayList<>();
+        for(Map.Entry<ProcessingState,Map<String,Integer>> aProcessingStateCount : countsPerEvent.entrySet()){
             for(Map.Entry<String,Integer> aEventIdentifierCount : aProcessingStateCount.getValue().entrySet()){
                 List<Object> aCount = new ArrayList<>();
                 aCount.add(aProcessingStateCount.getKey());
                 aCount.add(aEventIdentifierCount.getKey());
                 aCount.add(aEventIdentifierCount.getValue());
-                transformedCounts.add(aCount);
+                transformedEventCounts.add(aCount);
             }
         }
-        StatsData statsData = new StatsData();
-        statsData.setProcessingStateEventIdentifierCount(transformedCounts);
+        statsData.setProcessingStateEventIdentifierCount(transformedEventCounts);
+
+        //collect data per serviceIdentifier
+        Map<ProcessingState,Map<String,Integer>> countsPerService = databaseService.getServiceIdentifierCountForEachProcessingState(new Date(fromDate),new Date(toDate));
+        List<List<Object>> transformedServiceCounts = new ArrayList<>();
+        for(Map.Entry<ProcessingState,Map<String,Integer>> aProcessingStateCount : countsPerService.entrySet()){
+            for(Map.Entry<String,Integer> aServiceIdentifierCount : aProcessingStateCount.getValue().entrySet()){
+                List<Object> aCount = new ArrayList<>();
+                aCount.add(aProcessingStateCount.getKey());
+                aCount.add(aServiceIdentifierCount.getKey());
+                aCount.add(aServiceIdentifierCount.getValue());
+                transformedServiceCounts.add(aCount);
+            }
+        }
+        statsData.setProcessingStateServiceIdentifierCount(transformedServiceCounts);
+
+        //collect data per subscription
+        Map<ProcessingState,Map<String,Integer>> countsPerSubscription = databaseService.getSubscriptionCountForEachProcessingState(new Date(fromDate),new Date(toDate));
+        List<List<Object>> transformedSubscriptionsCounts = new ArrayList<>();
+        for(Map.Entry<ProcessingState,Map<String,Integer>> aProcessingStateCount : countsPerSubscription.entrySet()){
+            for(Map.Entry<String,Integer> aSubscriptionIdentifierCount : aProcessingStateCount.getValue().entrySet()){
+                List<Object> aCount = new ArrayList<>();
+                aCount.add(aProcessingStateCount.getKey());
+                aCount.add(aSubscriptionIdentifierCount.getKey());
+                aCount.add(aSubscriptionIdentifierCount.getValue());
+                transformedSubscriptionsCounts.add(aCount);
+            }
+        }
+        statsData.setProcessingStateSubscriptionsCount(transformedSubscriptionsCounts);
+
+
         return statsData;
     }
 

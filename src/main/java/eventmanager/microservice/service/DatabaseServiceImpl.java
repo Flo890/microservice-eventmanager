@@ -293,7 +293,9 @@ public class DatabaseServiceImpl implements DatabaseService {
         return new Long(eventsCollection.count(filter)).intValue();
     }
 
-    public Map<ProcessingState,Map<String,Integer>> getEventIdentifierCountForEachProcessingState(){
+    // ----------- FOR STATS ENDPOINTS ------------
+
+    public Map<ProcessingState,Map<String,Integer>> getEventIdentifierCountForEachProcessingState(Date fromDate, Date toDate){
         MongoCollection<Document> eventsCollection = mongoDatabase.getCollection(EVENTS_COLLECTION_NAME);
 
         Map<ProcessingState,Map<String,Integer>> counts = new HashMap<>();
@@ -303,12 +305,66 @@ public class DatabaseServiceImpl implements DatabaseService {
                 Document filter = new Document();
                 filter.append("eventIdentifier", aEventIdentifier);
                 filter.append("processingMetadata.processing_state", aProcessingState.name());
+                filter.append("publishingDate",new Document().append("$gte",fromDate).append("$lte",toDate));
                 Integer count = new Long(eventsCollection.count(filter)).intValue();
                 eventIdentifiersCount.put(aEventIdentifier,count);
             }
             counts.put(aProcessingState,eventIdentifiersCount);
         }
         return counts;
+    }
+
+    public Map<ProcessingState,Map<String,Integer>> getServiceIdentifierCountForEachProcessingState(Date fromDate, Date toDate){
+        MongoCollection<Document> eventsCollection = mongoDatabase.getCollection(EVENTS_COLLECTION_NAME);
+
+        Map<ProcessingState,Map<String,Integer>> counts = new HashMap<>();
+        for(ProcessingState aProcessingState : ProcessingState.values()) {
+            Map<String,Integer> serviceIdentifiersCount = new HashMap<>();
+            for(String aServiceIdentifier : getAllExistingServiceIdentifiers()) {
+                Document filter = new Document();
+                filter.append("serviceIdentifier", aServiceIdentifier);
+                filter.append("processingMetadata.processing_state", aProcessingState.name());
+                filter.append("publishingDate",new Document().append("$gte",fromDate).append("$lte",toDate));
+                Integer count = new Long(eventsCollection.count(filter)).intValue();
+                serviceIdentifiersCount.put(aServiceIdentifier,count);
+            }
+            counts.put(aProcessingState,serviceIdentifiersCount);
+        }
+        return counts;
+    }
+
+    public Map<ProcessingState,Map<String,Integer>> getSubscriptionCountForEachProcessingState(Date fromDate, Date toDate){
+        MongoCollection<Document> eventsCollection = mongoDatabase.getCollection(EVENTS_COLLECTION_NAME);
+
+        Map<ProcessingState,Map<String,Integer>> counts = new HashMap<>();
+        for(ProcessingState aProcessingState : ProcessingState.values()) {
+            Map<String,Integer> subscriptionsCount = new HashMap<>();
+            for(Map.Entry<String,List<String>> aServiceIdentifier : getAllExistingSubscriptions().entrySet()) {
+                for(String aEventIdentifier : aServiceIdentifier.getValue()){
+                    Document filter = new Document();
+                    filter.append("serviceIdentifier", aServiceIdentifier.getKey());
+                    filter.append("eventIdentifier", aEventIdentifier);
+                    filter.append("processingMetadata.processing_state", aProcessingState.name());
+                    filter.append("publishingDate",new Document().append("$gte",fromDate).append("$lte",toDate));
+                    Integer count = new Long(eventsCollection.count(filter)).intValue();
+                    String subscriptionDisplayName = aEventIdentifier+"@"+aServiceIdentifier.getKey();
+                    subscriptionsCount.put(subscriptionDisplayName,count);
+                }
+            }
+            counts.put(aProcessingState,subscriptionsCount);
+        }
+        return counts;
+    }
+
+    private List<String> getAllExistingServiceIdentifiers() {
+        MongoCollection<Document> eventsCollection = mongoDatabase.getCollection(EVENTS_COLLECTION_NAME);
+
+        Iterable<String> serviceIdentifiersIterable = eventsCollection.distinct("serviceIdentifier",String.class);
+
+        List<String> distinctServiceIdentifiers = new ArrayList<>();
+        serviceIdentifiersIterable.forEach(s -> distinctServiceIdentifiers.add(s));
+
+        return distinctServiceIdentifiers;
     }
 
     private List<String> getAllExistingEventIdentifiers(){
@@ -321,4 +377,26 @@ public class DatabaseServiceImpl implements DatabaseService {
 
         return distinctEventIdentifiers;
     }
+
+    /**
+     *
+     * @return Map serviceIdentifier -> list of subscribed eventIdentifiers
+     */
+    private Map<String,List<String>> getAllExistingSubscriptions(){
+        MongoCollection<Document> subscriptionsCollection = mongoDatabase.getCollection(SUBSCRIPTIONS_COLLECTION_NAME);
+        Iterable<Document> subscriptions = subscriptionsCollection.find();
+
+        Map<String,List<String>> transformedSubscriptions = new HashMap<>();
+        for(Document aDocument : subscriptions){
+            String serviceIdentifier = aDocument.getString("serviceIdentifier");
+            if(!transformedSubscriptions.containsKey(serviceIdentifier)){
+                transformedSubscriptions.put(serviceIdentifier,new ArrayList<>());
+            }
+            transformedSubscriptions.get(serviceIdentifier).add(aDocument.getString("eventIdentifier"));
+        }
+
+        return transformedSubscriptions;
+    }
+
+
 }

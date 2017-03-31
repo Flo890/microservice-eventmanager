@@ -47,5 +47,9 @@ public interface DatabaseService {
      * used by stats endpoint
      * @return
      */
-    Map<ProcessingState,Map<String,Integer>> getEventIdentifierCountForEachProcessingState();
+    Map<ProcessingState,Map<String,Integer>> getEventIdentifierCountForEachProcessingState(Date fromDate, Date toDate);
+
+    Map<ProcessingState,Map<String,Integer>> getServiceIdentifierCountForEachProcessingState(Date fromDate, Date toDate);
+
+    Map<ProcessingState,Map<String,Integer>> getSubscriptionCountForEachProcessingState(Date fromDate, Date toDate);
 }
