@@ -2,8 +2,11 @@ package eventmanager.microservice.app;
 
 import com.codahale.metrics.annotation.Timed;
 import eventmanager.microservice.model.ProcessingState;
+import eventmanager.microservice.model.stats.EventFilterListData;
 import eventmanager.microservice.model.stats.StatsData;
 import eventmanager.microservice.service.DatabaseService;
+import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -92,6 +95,63 @@ public class StatsResource {
 
 
         return statsData;
+    }
+
+    /**
+     *
+     * @param fromDate
+     * @param toDate
+     * @param filterExpressions komma-separated list of equals expressions:  processingMetadata.processingState=processing,aField=aValue
+     * @param sortExpressions komma-separated list of sort expressions: publishingDate:desc,aNumberField:asc
+     * @param limit amount of events to return
+     * @return
+     */
+    @GET
+    @Timed
+    @Path("event_filter_list")
+    @Produces(MediaType.APPLICATION_JSON)
+    public EventFilterListData getEventFilterListData(
+            @QueryParam("fromDate") Long fromDate,
+            @QueryParam("toDate") Long toDate,
+            @QueryParam("filterExpressions") String filterExpressions,
+            @QueryParam("sortExpressions") String sortExpressions,
+            @QueryParam("limit") Integer limit) {
+
+        //build filter
+        Document filter = new Document();
+        if(!StringUtils.isEmpty(filterExpressions)) {
+            for (String aFilter : filterExpressions.split(",")) {
+                String[] aFilterSplit = aFilter.split("=");
+                filter.append(aFilterSplit[0], aFilterSplit[1]);
+            }
+        }
+        filter.append("publishingDate", new Document("$gte",new Date(fromDate)).append("$lte",new Date(toDate)));
+
+        //build sort
+        Document sort = null;
+        if(!StringUtils.isEmpty(sortExpressions)) {
+            sort = new Document();
+            for (String aSort : sortExpressions.split(",")) {
+                String[] aSortSplit = aSort.split(":");
+                sort.append(
+                        aSortSplit[0],
+                        aSortSplit[1].equals("asc") ? 1 : -1
+                );
+            }
+        }
+
+        //fetch data
+        Iterable<Document> iterable = databaseService.getEventsNative(filter,sort, limit);
+        List<Document> documents = new ArrayList<>();
+        for(Document document : iterable){
+            document.append("objectId",document.get("_id").toString());
+            documents.add(document);
+        }
+
+         // return data
+        EventFilterListData eventFilterListData = new EventFilterListData();
+        eventFilterListData.setDocuments(documents);
+        return eventFilterListData;
     }
 
 }

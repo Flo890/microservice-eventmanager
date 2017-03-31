@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<style>
+    #selectDateRange{
+        overflow: hidden;
+    }
+    #selectDateRange .fromDateContainer{
+        float:left;
+    }
+
+</style>
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="selectDateRange">
+        <div class="fromDateContainer">
+            <p>from date:</p>
+            <input id="fromDate" name="fromDate" type="text">
+        </div>
+        <div class="toDateContainer">
+            <p>to date:</p>
+            <input id="toDate" name="toDate" type="text">
+        </div>
+    </div>
+
+    <div class="filterInputs">
+        <p>Filter Expressions:</p>
+        <p>typical fields: processingMetadata.processing_state,eventIdentifier,serviceIdentifier,</p>
+        <input id="filterExpressions" type="text">
+        <p>Sort Expressions:</p>
+        <p>typical fields: processingMetadata.start_time,publishingDate</p>
+        <input id="sortExpressions" type="text">
+        <p>Limit:</p>
+        <input id="limit" type="number" value="100">
+        <button id="runButton" onclick="updateFilterList()">Run</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Subscription</th>
+                <th>processingState</th>
+                <th>Event</th>
+                <th>publishingDate</th>
+                <th>start_time</th>
+                <th>proc. time</th>
+                <th>objectId</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+
+        </tbody>
+    </table>
+</body>
+<script>
+    // ---------- initial date values ------------
+    var defaultFromDate = new Date(new Date()-14400000);
+    var defaultToDate = new Date(new Date()+14400000);
+    document.getElementById("fromDate").value = defaultFromDate.getFullYear()+"-"+(defaultFromDate.getMonth()+1)+"-"+defaultFromDate.getDate()+" "+defaultFromDate.getHours()+":"+defaultFromDate.getMinutes();
+    document.getElementById("toDate").value = defaultToDate.getFullYear()+"-"+(defaultToDate.getMonth()+1)+"-"+defaultToDate.getDate()+" "+defaultToDate.getHours()+":"+defaultToDate.getMinutes();
+
+
+    // ------ filter list -------
+    var updateFilterList = function(){
+
+        var params = "?fromDate="+new Date(document.getElementById("fromDate").value).getTime()+
+                "&toDate="+new Date(document.getElementById("toDate").value).getTime()+
+                "&filterExpressions="+document.getElementById("filterExpressions").value+
+                "&sortExpressions="+document.getElementById("sortExpressions").value+
+                "&limit="+document.getElementById("limit").value;
+        $.get("/stats/event_filter_list"+params, function (responseData) {
+            document.getElementById('tableBody').innerHTML = "";
+            responseData.documents.forEach(function(event){
+                var eventBody = '';
+                if(event.event){
+                    eventBody = JSON.stringify(event.event);
+                }
+                var startTime = '';
+                if(event.processingMetadata.start_time){
+                    startTime = new Date(event.processingMetadata.start_time);
+                }
+                var processingTime = '';
+                if(event.processingMetadata.start_time && event.processingMetadata.end_time){
+                    processingTime = event.processingMetadata.end_time-event.processingMetadata.start_time;
+                    if(processingTime > 59000){
+                        processingTime = (Math.round((processingTime/60000)*100)/100)+'min';
+                    } else if(processingTime > 1000){
+                        processingTime = (Math.round((processingTime/1000)*100)/100)+'s';
+                    } else {
+                        processingTime += 'ms';
+                    }
+                }
+                document.getElementById('tableBody').innerHTML+=(
+                    '<tr>' +
+                    '<td>'+event.eventIdentifier+'@'+event.serviceIdentifier+'</td>' +
+                    '<td>'+event.processingMetadata.processing_state+'</td>' +
+                    '<td>'+eventBody+'</td>' +
+                    '<td>'+new Date(event.publishingDate)+'</td>' +
+                    '<td>'+startTime+'</td>' +
+                    '<td>'+processingTime+'</td>' +
+                    '<td>'+event.objectId+'</td>' +
+                    '</tr>'
+                );
+            });
+        });
+    }
+</script>
+</html>

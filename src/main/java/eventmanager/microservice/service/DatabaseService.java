@@ -1,14 +1,11 @@
 package eventmanager.microservice.service;
 
-import eventmanager.clientservices.configuration.EventSubscription;
-import eventmanager.common.model.Event;
 import eventmanager.common.model.EventProperty;
 import eventmanager.common.model.EventUngeneric;
 import eventmanager.common.model.eventreturnmetadata.EventReturnMetadata;
 import eventmanager.microservice.model.ProcessingState;
 import org.bson.Document;
 
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -52,4 +49,6 @@ public interface DatabaseService {
     Map<ProcessingState,Map<String,Integer>> getServiceIdentifierCountForEachProcessingState(Date fromDate, Date toDate);
 
     Map<ProcessingState,Map<String,Integer>> getSubscriptionCountForEachProcessingState(Date fromDate, Date toDate);
+
+    Iterable<Document> getEventsNative(Document filter, Document sort, Integer limit);
 }

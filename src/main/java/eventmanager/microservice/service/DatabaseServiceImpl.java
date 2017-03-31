@@ -2,7 +2,7 @@ package eventmanager.microservice.service;
 
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
-import com.mongodb.client.DistinctIterable;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -18,8 +18,6 @@ import org.apache.log4j.Logger;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
-import javax.print.Doc;
-import java.io.IOException;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -398,5 +396,20 @@ public class DatabaseServiceImpl implements DatabaseService {
         return transformedSubscriptions;
     }
 
+    /**
+     *
+     * @param filter
+     * @param sort can be null
+     * @return
+     */
+    public Iterable<Document> getEventsNative(Document filter, Document sort, Integer limit){
+        MongoCollection<Document> eventsCollection = mongoDatabase.getCollection(EVENTS_COLLECTION_NAME);
+        FindIterable<Document> iterable = eventsCollection.find(filter).limit(limit);
+        if(sort == null){
+            return iterable;
+        } else {
+            return iterable.sort(sort);
+        }
+    }
 
 }
