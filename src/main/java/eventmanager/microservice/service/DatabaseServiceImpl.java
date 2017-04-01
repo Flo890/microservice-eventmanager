@@ -412,4 +412,22 @@ public class DatabaseServiceImpl implements DatabaseService {
         }
     }
 
+    public boolean overrideProcessingState(String eventId, ProcessingState newProcessingState){
+        MongoCollection<Document> eventsCollection = mongoDatabase.getCollection(EVENTS_COLLECTION_NAME);
+
+        Document filter = new Document()
+                .append("_id",new ObjectId(eventId));
+
+        Document update = new Document().append("$set",new Document()
+                .append("processingMetadata",new Document()
+                        .append("processing_state", newProcessingState.name()))
+        );
+
+        UpdateResult updateResult = eventsCollection.updateOne(filter,update);
+        if(updateResult.getMatchedCount() != 1L){
+            return false;
+        }
+        return true;
+    }
+
 }

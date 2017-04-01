@@ -30,7 +30,7 @@
     <div class="filterInputs">
         <p>Filter Expressions:</p>
         <p>typical fields: processingMetadata.processing_state,eventIdentifier,serviceIdentifier,</p>
-        <input id="filterExpressions" type="text">
+        <input id="filterExpressions" type="textarea">
         <p>Sort Expressions:</p>
         <p>typical fields: processingMetadata.start_time,publishingDate</p>
         <input id="sortExpressions" type="text">
@@ -38,6 +38,19 @@
         <input id="limit" type="number" value="100">
         <button id="runButton" onclick="updateFilterList()">Run</button>
     </div>
+
+    <hr>
+
+    <div class="applyAction">
+        <select id="newprocselect-all" name="new_proc_state">
+            <option value="unprocessed">unprocessed</option>
+            <option value="terminated">terminated</option>
+            <option value="outdated">outdated</option>
+        </select>
+        <button onclick="setProcStateAll();">set processing state for ALL listed events</button>
+    </div>
+
+    <hr>
 
     <table>
         <thead>
@@ -49,6 +62,7 @@
                 <th>start_time</th>
                 <th>proc. time</th>
                 <th>objectId</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody id="tableBody">
@@ -102,10 +116,58 @@
                     '<td>'+new Date(event.publishingDate)+'</td>' +
                     '<td>'+startTime+'</td>' +
                     '<td>'+processingTime+'</td>' +
-                    '<td>'+event.objectId+'</td>' +
+                    '<td class="idColumn">'+event.objectId+'</td>' +
+                    '<td>' +
+                        '<select id="newprocselect-'+event.objectId+'" name="new_proc_state">'+
+                            '<option value="unprocessed">unprocessed</option>'+
+                            '<option value="terminated">terminated</option>'+
+                            '<option value="outdated">outdated</option>'+
+                        '</select>'+
+                        '<button onclick="setProcStateSingle(\''+event.objectId+'\');">set processing state</button>' +
+                    '</td>' +
                     '</tr>'
                 );
             });
+        });
+    }
+
+    setProcStateSingle = function(eventId) {
+        var postData = {
+            newProcessingState: document.getElementById('newprocselect-'+eventId).value,
+            eventIds: [eventId]
+        };
+        $.ajax({
+            url:"/stats/set_processing_state",
+            data: JSON.stringify(postData),
+            headers: {
+                "Content-Type":"application/json"
+            },
+            method: "POST"
+        }).always(function( data ) {
+            updateFilterList();
+        });
+    }
+
+    setProcStateAll = function() {
+        var eventIds = [];
+        var eventItems = document.getElementById('tableBody').children;
+        for(i = 0; i<eventItems.length; i++){
+            eventIds.push(eventItems[i].getElementsByClassName('idColumn')[0].innerHTML);
+        }
+
+        var postData = {
+            newProcessingState: document.getElementById('newprocselect-all').value,
+            eventIds: eventIds
+        };
+        $.ajax({
+            url:"/stats/set_processing_state",
+            data: JSON.stringify(postData),
+            headers: {
+                "Content-Type":"application/json"
+            },
+            method: "POST"
+        }).always(function( data ) {
+            updateFilterList();
         });
     }
 </script>

@@ -51,4 +51,6 @@ public interface DatabaseService {
     Map<ProcessingState,Map<String,Integer>> getSubscriptionCountForEachProcessingState(Date fromDate, Date toDate);
 
     Iterable<Document> getEventsNative(Document filter, Document sort, Integer limit);
+
+    boolean overrideProcessingState(String eventId, ProcessingState newProcessingState);
 }

@@ -3,15 +3,13 @@ package eventmanager.microservice.app;
 import com.codahale.metrics.annotation.Timed;
 import eventmanager.microservice.model.ProcessingState;
 import eventmanager.microservice.model.stats.EventFilterListData;
+import eventmanager.microservice.model.stats.SetProcStatePostData;
 import eventmanager.microservice.model.stats.StatsData;
 import eventmanager.microservice.service.DatabaseService;
 import org.apache.commons.lang.StringUtils;
 import org.bson.Document;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.Date;
@@ -44,7 +42,6 @@ public class StatsResource {
      */
 
     @GET
-    @Timed
     @Path("processingstate_eventidentifier_count")
     @Produces(MediaType.APPLICATION_JSON)
     public StatsData getAllStats(@QueryParam("fromDate") Long fromDate, @QueryParam("toDate") Long toDate) {
@@ -107,7 +104,6 @@ public class StatsResource {
      * @return
      */
     @GET
-    @Timed
     @Path("event_filter_list")
     @Produces(MediaType.APPLICATION_JSON)
     public EventFilterListData getEventFilterListData(
@@ -154,4 +150,17 @@ public class StatsResource {
         return eventFilterListData;
     }
 
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("set_processing_state")
+    public String getEventFilterListData(SetProcStatePostData setProcStatePostData){
+        for(String eventId : setProcStatePostData.getEventIds()){
+            databaseService.overrideProcessingState(
+                    eventId,
+                    ProcessingState.valueOf(setProcStatePostData.getNewProcessingState())
+            );
+        }
+        return "done";
+    }
 }
