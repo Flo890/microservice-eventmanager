@@ -64,6 +64,12 @@ public class EventReturnMetadata {
         return eventReturnMetadata;
     }
 
+    public static EventReturnMetadata createNotProcessable(String eventId, Long startTime, Long endTime, EventExecutionMetadata eventExecutionMetadata, String reason) {
+        EventReturnMetadata eventReturnMetadata = new EventReturnMetadata(EventReturnState.aborted_notprocessable,eventId,startTime,endTime,eventExecutionMetadata);
+        eventReturnMetadata.setReason(reason);
+        return null;
+    }
+
     public String getEventId() {
         return eventId;
     }
@@ -119,6 +125,5 @@ public class EventReturnMetadata {
     public void setReason(String reason) {
         this.reason = reason;
     }
-
 
 }

@@ -5,6 +5,6 @@ package eventmanager.microservice.model;
  */
 public enum ProcessingState {
 
-    unprocessed,processing,processed,outdated,failed,terminated
+    unprocessed,processing,processed,outdated,failed,terminated,notprocessable
 
 }

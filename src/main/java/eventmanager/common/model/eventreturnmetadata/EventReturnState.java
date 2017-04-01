@@ -5,6 +5,6 @@ package eventmanager.common.model.eventreturnmetadata;
  */
 public enum EventReturnState {
 
-    completed_successful, terminated, failed_withexception
+    completed_successful, terminated, failed_withexception, aborted_notprocessable
 
 }

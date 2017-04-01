@@ -11,8 +11,10 @@ import com.mongodb.client.result.UpdateResult;
 import eventmanager.common.model.EventProperty;
 import eventmanager.common.model.EventUngeneric;
 import eventmanager.common.model.eventreturnmetadata.EventReturnMetadata;
+import eventmanager.common.model.eventreturnmetadata.EventReturnState;
 import eventmanager.microservice.exception.DatabaseException;
 import eventmanager.microservice.model.ProcessingState;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.bson.Document;
@@ -184,21 +186,33 @@ public class DatabaseServiceImpl implements DatabaseService {
             case terminated:
                 newProcessingState = ProcessingState.terminated;
                 break;
+            case aborted_notprocessable:
+                newProcessingState = ProcessingState.notprocessable;
+                break;
         }
         if(newProcessingState == null){
             throw new NullPointerException("return state could not be converted to processing state");
         }
 
-        Document subdoc = new Document()
-                .append("processingMetadata",new Document()
-                        .append("processing_state",newProcessingState.name())
-                        .append("start_time",eventReturnMetadata.getStartTime())
-                        .append("end_time",eventReturnMetadata.getEndTime())
+        Document subsubdoc = new Document()
+                .append("processing_state",newProcessingState.name())
+                .append("start_time",eventReturnMetadata.getStartTime())
+                .append("end_time",eventReturnMetadata.getEndTime());
 
-                );
+        if(
+                eventReturnMetadata.getEventReturnState() == EventReturnState.aborted_notprocessable &&
+                        !StringUtils.isEmpty(eventReturnMetadata.getReason())
+                ){
+            subsubdoc.append("notprocessable_reason",eventReturnMetadata.getReason());
+        }
+
+        Document subdoc = new Document()
+                .append("processingMetadata",subsubdoc);
+
         if(eventReturnMetadata.getEventExecutionMetadata()!=null){
             subdoc.append("event_execution_metadata",eventReturnMetadata.getEventExecutionMetadata().toDocument());
         }
+
         Document update = new Document()
                 .append("$set",subdoc);
 

@@ -2,6 +2,7 @@ package eventmanager.clientservices.service;
 
 import eventmanager.clientservices.configuration.EventSubscription;
 import eventmanager.clientservices.configuration.EventSubscriptionBatch;
+import eventmanager.clientservices.exception.EventNotProcessableException;
 import eventmanager.clientservices.service.clientservercommunication.EventmanagerCommunicationService;
 import eventmanager.clientservices.service.eventprocessing.EventProcessingCallable;
 import eventmanager.common.model.Event;
@@ -136,6 +137,15 @@ public class EventReceivingThread extends Thread {
                                 new Date().getTime(),
                                 null, //TODO find a way to get the execution metadata in case of failure
                                 e
+                        );
+                    } catch (EventNotProcessableException npe) {
+                        LOGGER.info(logPrefix+"Processing event "+fetchedEvent.getId()+" stopped because event is not proccessable: "+npe.getReason(),npe);
+                        eventReturnMetadata = EventReturnMetadata.createNotProcessable(
+                                fetchedEvent.getId(),
+                                startTime,
+                                new Date().getTime(),
+                                null, //TODO find a way to get the execution metadata in case of failure
+                                npe.getReason()
                         );
                     }
 
