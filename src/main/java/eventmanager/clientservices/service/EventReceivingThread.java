@@ -130,23 +130,28 @@ public class EventReceivingThread extends Thread {
                         );
 
                     } catch (InterruptedException | ExecutionException e) {
-                        LOGGER.warn(logPrefix + "Processing event " + fetchedEvent.getId() + " failed due to exception: "+e.getMessage(), e);
-                        eventReturnMetadata = EventReturnMetadata.createFailed(
-                                fetchedEvent.getId(),
-                                startTime,
-                                new Date().getTime(),
-                                null, //TODO find a way to get the execution metadata in case of failure
-                                e
-                        );
-                    } catch (EventNotProcessableException npe) {
-                        LOGGER.info(logPrefix+"Processing event "+fetchedEvent.getId()+" stopped because event is not proccessable: "+npe.getReason(),npe);
-                        eventReturnMetadata = EventReturnMetadata.createNotProcessable(
-                                fetchedEvent.getId(),
-                                startTime,
-                                new Date().getTime(),
-                                null, //TODO find a way to get the execution metadata in case of failure
-                                npe.getReason()
-                        );
+
+                        if(e.getCause() instanceof EventNotProcessableException){
+                            Throwable npe = e.getCause();
+                            LOGGER.info(logPrefix+"Processing event "+fetchedEvent.getId()+" stopped because event is not proccessable: "+npe.getMessage(),npe);
+                            eventReturnMetadata = EventReturnMetadata.createNotProcessable(
+                                    fetchedEvent.getId(),
+                                    startTime,
+                                    new Date().getTime(),
+                                    null, //TODO find a way to get the execution metadata in case of failure
+                                    npe.getMessage()
+                            );
+                        } else {
+
+                            LOGGER.warn(logPrefix + "Processing event " + fetchedEvent.getId() + " failed due to exception: " + e.getMessage(), e);
+                            eventReturnMetadata = EventReturnMetadata.createFailed(
+                                    fetchedEvent.getId(),
+                                    startTime,
+                                    new Date().getTime(),
+                                    null, //TODO find a way to get the execution metadata in case of failure
+                                    e
+                            );
+                        }
                     }
 
                     // send the result of this event processing to the server

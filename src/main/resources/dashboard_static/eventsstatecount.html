@@ -93,7 +93,7 @@ line{
 
     // ----------- graph 1: processing state per eventIdentifier -------------
 
-    var color ={unprocessed:"#3366CC", processing:"#DC3912",  failed:"#FF9900", outdated:"#109618", processed:"#990099", terminated:"#0099C6"};
+    var color ={unprocessed:"#FF9900", processing:"#DC3912",  failed:"#3366CC", outdated:"#109618", processed:"#990099", terminated:"#0099C6", notprocessable:"#4f4f4f"};
     var svg1 = d3.select("#diagramOne").append("svg").attr("width", 750).attr("height", 800);
 
     svg1.append("text").attr("x",250).attr("y",70)

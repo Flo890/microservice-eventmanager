@@ -154,7 +154,7 @@ public class StatsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("set_processing_state")
-    public String getEventFilterListData(SetProcStatePostData setProcStatePostData){
+    public String changeEventsStates(SetProcStatePostData setProcStatePostData){
         for(String eventId : setProcStatePostData.getEventIds()){
             databaseService.overrideProcessingState(
                     eventId,
