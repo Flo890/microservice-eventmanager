@@ -26,8 +26,8 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile 'com.github.Flo890:microservice-commons:v0.1.0-beta.2'
-    //compile files('../microservice-commons/build/libs/microservice-commons-0.1.jar')
+   // compile 'com.github.Flo890:microservice-commons:v0.1.0-beta.2'
+    compile files('../microservice-commons/build/libs/microservice-commons-0.1.jar')
 
     compile 'io.dropwizard:dropwizard-core:1.0.0-rc2'
     // https://mvnrepository.com/artifact/io.dropwizard/dropwizard-assets

@@ -2,6 +2,7 @@ package eventmanager.clientservices.service;
 
 import eventmanager.clientservices.configuration.EventSubscription;
 import eventmanager.clientservices.configuration.EventSubscriptionBatch;
+import eventmanager.clientservices.exception.EventNotProcessableBecauseIncompatibleToSystemException;
 import eventmanager.clientservices.exception.EventNotProcessableException;
 import eventmanager.clientservices.service.clientservercommunication.EventmanagerCommunicationService;
 import eventmanager.clientservices.service.eventprocessing.EventProcessingCallable;
@@ -131,18 +132,20 @@ public class EventReceivingThread extends Thread {
 
                     } catch (InterruptedException | ExecutionException e) {
 
-                        if(e.getCause() instanceof EventNotProcessableException){
-                            Throwable npe = e.getCause();
-                            LOGGER.info(logPrefix+"Processing event "+fetchedEvent.getId()+" stopped because event is not proccessable: "+npe.getMessage(),npe);
-                            eventReturnMetadata = EventReturnMetadata.createNotProcessable(
-                                    fetchedEvent.getId(),
-                                    startTime,
-                                    new Date().getTime(),
-                                    null, //TODO find a way to get the execution metadata in case of failure
-                                    npe.getMessage()
-                            );
-                        } else {
+                        // processing failed because the event is not processable. Maybe data invalid, or required features to handle it not implemented
+                        if(e.getCause() instanceof EventNotProcessableBecauseIncompatibleToSystemException) {
+                                Throwable npe = e.getCause();
+                                LOGGER.info(logPrefix + "Processing event " + fetchedEvent.getId() + " stopped because event is not proccessable: " + npe.toString(), npe);
+                                eventReturnMetadata = EventReturnMetadata.createNotProcessable(
+                                        fetchedEvent.getId(),
+                                        startTime,
+                                        new Date().getTime(),
+                                        null, //TODO find a way to get the execution metadata in case of failure
+                                        npe.toString()
+                                );
 
+                            // any other unexpected problem occured
+                        } else {
                             LOGGER.warn(logPrefix + "Processing event " + fetchedEvent.getId() + " failed due to exception: " + e.getMessage(), e);
                             eventReturnMetadata = EventReturnMetadata.createFailed(
                                     fetchedEvent.getId(),
